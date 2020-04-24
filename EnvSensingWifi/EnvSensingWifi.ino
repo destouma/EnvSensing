@@ -3,10 +3,11 @@
 #include <Wire.h>
 #include <HttpClient.h>
 
+#include "arduino_secrets.h" 
+
 // your network SSID (name)
-char ssid[] = "manu-laet";   
-// your network password (use for WPA, or use as key for WEP)
-char pass[] = "06071972"; 
+char ssid[] = SECRET_SSID;        // your network SSID (name)
+char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 // your network key Index number (needed only for WEP)   
 int keyIndex = 0;            
 
@@ -23,7 +24,7 @@ int statusCode = 0;
 // last time you connected to the server, in milliseconds
 unsigned long lastConnectionTime = 0;  
 // delay between updates, in milliseconds             
-const unsigned long postingInterval = 600L * 1000L; 
+const unsigned long postingInterval = 10L * 1000L; 
 
 
 void setup() {
@@ -73,6 +74,7 @@ void loop() {
 
 // this method makes a HTTP connection to the server:
 void httpRequest() {
+  lastConnectionTime = millis();
   // Post request with JSON content in a string
   Serial.println("making POST request");
   String contentType = "application/json";
