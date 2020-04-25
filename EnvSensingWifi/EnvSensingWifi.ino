@@ -2,6 +2,8 @@
 #include <WiFiNINA.h>
 #include <Wire.h>
 #include <HttpClient.h>
+#include <ArduinoJson.h>
+#include <Adafruit_BMP280.h>
 
 #include "arduino_secrets.h" 
 
@@ -27,6 +29,14 @@ unsigned long lastConnectionTime = 0;
 const unsigned long postingInterval = 10L * 1000L; 
 
 
+// BMP 280 sensor
+#define BMP_SCK  (13)
+#define BMP_MISO (12)
+#define BMP_MOSI (11)
+#define BMP_CS   (10)
+
+Adafruit_BMP280 bmp;
+
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
@@ -35,6 +45,16 @@ void setup() {
     ; 
   }
 
+  // check bmp280 sensor
+  if (!bmp.begin()) {
+    Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
+    while (1);
+  }
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                  Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -78,9 +98,8 @@ void httpRequest() {
   // Post request with JSON content in a string
   Serial.println("making POST request");
   String contentType = "application/json";
-  //String postData = "{\"sensor_uuid\":\"123-123-000-002\",\"sensor_value\":102300}";
-  String postData = getPostDataJson(1000,1000,100);
-  Serial.println("JSON content:" + postData);
+  String postData = getPostDataJson(getTemperature(),getPressure(),getBatteryLevel());
+//  Serial.println("JSON content:" + postData);
   client1.post("/api/v1/device_readings", contentType, postData);
 
   // read the status code and body of the response
@@ -100,27 +119,52 @@ void httpRequest() {
   }
 }
 
-String getPostDataJson(int temp, int pres, int batt){
-//  String tmp_data_1 = "{ \"device_uuid\" : \"123-123-000-000\",";
-//  String tmp_data_2 = " \"sensor_readings\" : [";
-//  String tmp_data_3 = " {\"sensor_uuid\": \"123-123-000-001\",\"sensor_value\": ";
-//  char* tmp_data_4;
-//  itoa(temp,tmp_data_4,10);
-//  String tmp_data_5 = " },";
-//  String tmp_data_6 = " {\"sensor_uuid\": \"123-123-000-002\",\"sensor_value\": ";
-//  char* tmp_data_7;
-//  itoa(pres,tmp_data_7,10);
-//  String tmp_data_8 = " },";
-//  String tmp_data_9 = " {\"sensor_uuid\": \"123-123-000-003\",\"sensor_value\": ";
-//  char* tmp_data_10;
-//  itoa(batt,tmp_data_7,10);
-//  String tmp_data_11 = " }]}";
-//
-//  String tmp_data = tmp_data_1 + tmp_data_2 + tmp_data_3 + tmp_data_4 + tmp_data_5 + tmp_data_6 + tmp_data_7 + tmp_data_8 + tmp_data_9 + tmp_data_10 + tmp_data_11;
-//  
-//  return tmp_data;    
-    return "{\"sensor_uuid\":\"123-123-000-002\",\"sensor_value\":102300}";
+String getPostDataJson(long temp, long pres, long batt){
+  StaticJsonDocument<200> doc;
+  doc["device_uuid"] = "123-123-000-000";
+  JsonArray readings = doc.createNestedArray("sensor_readings");
+  JsonObject object1 = readings.createNestedObject();
+  object1["sensor_uuid"] = "123-123-000-001";
+  object1["sensor_value"] = temp;
+  JsonObject object2 = readings.createNestedObject();
+  object2["sensor_uuid"] = "123-123-000-002";
+  object2["sensor_value"] = pres;
+  JsonObject object3 = readings.createNestedObject();
+  object3["sensor_uuid"] = "123-123-000-003";
+  object3["sensor_value"] = batt;
+
+  String tmpJson;
+  serializeJson(doc, tmpJson);
+  Serial.print("Json: ");
+  Serial.println(tmpJson);
+  return tmpJson;
 }
+
+int getBatteryLevel(){
+  int battery = analogRead(ADC_BATTERY);
+  int batteryLevel = map(battery, 0, 1023, 0, 100);
+  
+  Serial.print("Battery Level % is now: "); // print it
+  Serial.println(batteryLevel);
+
+  return batteryLevel;
+}
+
+long getTemperature(){
+  short temperature = bmp.readTemperature() * 100;
+  Serial.print(F("Temperature = "));
+  Serial.println(temperature);
+  
+  return temperature;
+}
+
+long getPressure(){
+ unsigned long pressure = bmp.readPressure(); 
+ Serial.print(F("Pressure = "));
+ Serial.println(pressure);
+ return pressure;
+}
+
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
