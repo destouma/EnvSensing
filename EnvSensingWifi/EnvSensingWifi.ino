@@ -78,9 +78,10 @@ void httpRequest() {
   // Post request with JSON content in a string
   Serial.println("making POST request");
   String contentType = "application/json";
-  String postData = "{\"sensor_uuid\":\"123-123-000-002\",\"sensor_value\":102300}";
-
-  client1.post("/api/v1/sensor_readings", contentType, postData);
+  //String postData = "{\"sensor_uuid\":\"123-123-000-002\",\"sensor_value\":102300}";
+  String postData = getPostDataJson(1000,1000,100);
+  Serial.println("JSON content:" + postData);
+  client1.post("/api/v1/device_readings", contentType, postData);
 
   // read the status code and body of the response
   statusCode = client1.responseStatusCode();
@@ -97,6 +98,28 @@ void httpRequest() {
     Serial.println("disconnecting from server.");
     client.stop();
   }
+}
+
+String getPostDataJson(int temp, int pres, int batt){
+//  String tmp_data_1 = "{ \"device_uuid\" : \"123-123-000-000\",";
+//  String tmp_data_2 = " \"sensor_readings\" : [";
+//  String tmp_data_3 = " {\"sensor_uuid\": \"123-123-000-001\",\"sensor_value\": ";
+//  char* tmp_data_4;
+//  itoa(temp,tmp_data_4,10);
+//  String tmp_data_5 = " },";
+//  String tmp_data_6 = " {\"sensor_uuid\": \"123-123-000-002\",\"sensor_value\": ";
+//  char* tmp_data_7;
+//  itoa(pres,tmp_data_7,10);
+//  String tmp_data_8 = " },";
+//  String tmp_data_9 = " {\"sensor_uuid\": \"123-123-000-003\",\"sensor_value\": ";
+//  char* tmp_data_10;
+//  itoa(batt,tmp_data_7,10);
+//  String tmp_data_11 = " }]}";
+//
+//  String tmp_data = tmp_data_1 + tmp_data_2 + tmp_data_3 + tmp_data_4 + tmp_data_5 + tmp_data_6 + tmp_data_7 + tmp_data_8 + tmp_data_9 + tmp_data_10 + tmp_data_11;
+//  
+//  return tmp_data;    
+    return "{\"sensor_uuid\":\"123-123-000-002\",\"sensor_value\":102300}";
 }
 
 void printWifiStatus() {
