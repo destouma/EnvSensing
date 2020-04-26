@@ -16,8 +16,8 @@ int keyIndex = 0;
 int status = WL_IDLE_STATUS;
 
 // Web server informations
-IPAddress server(192,168,1,215);
-int port = 3000;
+IPAddress server(192,168,1,204);
+int port = 80;
 WiFiClient client;
 HttpClient client1 = HttpClient(client, server, port);
 String response;
@@ -26,7 +26,7 @@ int statusCode = 0;
 // last time you connected to the server, in milliseconds
 unsigned long lastConnectionTime = 0;  
 // delay between updates, in milliseconds             
-const unsigned long postingInterval = 10L * 1000L; 
+const unsigned long postingInterval = 600L * 1000L; 
 
 
 // BMP 280 sensor
@@ -103,6 +103,7 @@ void httpRequest() {
 //  client1.post("/api/v1/device_readings.json", contentType,postData);
   client1.beginRequest();
   client1.post("/api/v1/device_readings.json");
+  client1.sendHeader("Host", "192.168.1.204");
   client1.sendHeader(HTTP_HEADER_CONTENT_TYPE, "application/json");
   client1.sendHeader(HTTP_HEADER_CONTENT_LENGTH, postData.length());
   client1.endRequest();
