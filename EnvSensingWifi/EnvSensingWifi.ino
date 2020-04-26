@@ -97,10 +97,17 @@ void httpRequest() {
   lastConnectionTime = millis();
   // Post request with JSON content in a string
   Serial.println("making POST request");
-  String contentType = "application/json";
+//  String contentType = "application/json";
   String postData = getPostDataJson(getTemperature(),getPressure(),getBatteryLevel());
 //  Serial.println("JSON content:" + postData);
-  client1.post("/api/v1/device_readings", contentType, postData);
+//  client1.post("/api/v1/device_readings.json", contentType,postData);
+  client1.beginRequest();
+  client1.post("/api/v1/device_readings.json");
+  client1.sendHeader(HTTP_HEADER_CONTENT_TYPE, "application/json");
+  client1.sendHeader(HTTP_HEADER_CONTENT_LENGTH, postData.length());
+  client1.endRequest();
+  client1.write((const byte*)postData.c_str(), postData.length());
+
 
   // read the status code and body of the response
   statusCode = client1.responseStatusCode();
