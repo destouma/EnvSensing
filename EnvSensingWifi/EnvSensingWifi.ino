@@ -4,7 +4,6 @@
 #include <HttpClient.h>
 #include <ArduinoJson.h>
 #include <Adafruit_BMP280.h>
-
 #include "arduino_secrets.h" 
 
 // your network SSID (name)
@@ -21,21 +20,20 @@ int port = 80;
 WiFiClient client;
 HttpClient client1 = HttpClient(client, server, port);
 String response;
-int statusCode = 0;
-
-// last time you connected to the server, in milliseconds
-unsigned long lastConnectionTime = 0;  
-// delay between updates, in milliseconds             
-const unsigned long postingInterval = 600L * 1000L; 
-
+int statusCode = 0;       
+String postData;
 
 // BMP 280 sensor
 #define BMP_SCK  (13)
 #define BMP_MISO (12)
 #define BMP_MOSI (11)
 #define BMP_CS   (10)
-
 Adafruit_BMP280 bmp;
+int battery=0;
+int batteryLevel=0;
+short temperature=0;
+unsigned long pressure=0;
+unsigned long counter=0;
 
 void setup() {
   //Initialize serial and wait for port to open:
@@ -83,24 +81,39 @@ void setup() {
   printWifiStatus();
 }
 
-
 void loop() {
-  // if 600 seconds have passed since your last connection,
-  // then connect again and send data:
-  if (millis() - lastConnectionTime > postingInterval) {
-    httpRequest();
-  }
+  updateBatteryLevel();
+  updateTemperature();
+  updatePressure();
+  httpRequest();
+  delay(60000);
 }
 
 // this method makes a HTTP connection to the server:
 void httpRequest() {
-  lastConnectionTime = millis();
-  // Post request with JSON content in a string
   Serial.println("making POST request");
-//  String contentType = "application/json";
-  String postData = getPostDataJson(getTemperature(),getPressure(),getBatteryLevel());
-//  Serial.println("JSON content:" + postData);
-//  client1.post("/api/v1/device_readings.json", contentType,postData);
+  postData="";
+  counter++;
+  StaticJsonDocument<500> doc;
+  doc["device_uuid"] = "123-123-000-000";
+  JsonArray readings = doc.createNestedArray("sensor_readings");
+  JsonObject object1 = readings.createNestedObject();
+  object1["sensor_uuid"] = "123-123-000-001";
+  object1["sensor_value"] = temperature;
+  JsonObject object2 = readings.createNestedObject();
+  object2["sensor_uuid"] = "123-123-000-002";
+  object2["sensor_value"] = pressure;
+  JsonObject object3 = readings.createNestedObject();
+  object3["sensor_uuid"] = "123-123-000-003";
+  object3["sensor_value"] = batteryLevel;
+  JsonObject object4 = readings.createNestedObject();
+  object4["sensor_uuid"] = "123-123-000-004";
+  object4["sensor_value"] = counter;
+  serializeJson(doc, postData);
+  
+  Serial.print("Post Data:");
+  Serial.println(postData);
+
   client1.beginRequest();
   client1.post("/api/v1/device_readings.json");
   client1.sendHeader("Host", "192.168.1.204");
@@ -108,7 +121,6 @@ void httpRequest() {
   client1.sendHeader(HTTP_HEADER_CONTENT_LENGTH, postData.length());
   client1.endRequest();
   client1.write((const byte*)postData.c_str(), postData.length());
-
 
   // read the status code and body of the response
   statusCode = client1.responseStatusCode();
@@ -127,52 +139,24 @@ void httpRequest() {
   }
 }
 
-String getPostDataJson(long temp, long pres, long batt){
-  StaticJsonDocument<200> doc;
-  doc["device_uuid"] = "123-123-000-000";
-  JsonArray readings = doc.createNestedArray("sensor_readings");
-  JsonObject object1 = readings.createNestedObject();
-  object1["sensor_uuid"] = "123-123-000-001";
-  object1["sensor_value"] = temp;
-  JsonObject object2 = readings.createNestedObject();
-  object2["sensor_uuid"] = "123-123-000-002";
-  object2["sensor_value"] = pres;
-  JsonObject object3 = readings.createNestedObject();
-  object3["sensor_uuid"] = "123-123-000-003";
-  object3["sensor_value"] = batt;
-
-  String tmpJson;
-  serializeJson(doc, tmpJson);
-  Serial.print("Json: ");
-  Serial.println(tmpJson);
-  return tmpJson;
-}
-
-int getBatteryLevel(){
-  int battery = analogRead(ADC_BATTERY);
-  int batteryLevel = map(battery, 0, 1023, 0, 100);
-  
+void updateBatteryLevel(){
+  battery = analogRead(ADC_BATTERY);
+  batteryLevel = map(battery, 0, 1023, 0, 100);
   Serial.print("Battery Level % is now: "); // print it
   Serial.println(batteryLevel);
-
-  return batteryLevel;
 }
 
-long getTemperature(){
-  short temperature = bmp.readTemperature() * 100;
+void updateTemperature(){
+  temperature = bmp.readTemperature() * 100;
   Serial.print(F("Temperature = "));
   Serial.println(temperature);
-  
-  return temperature;
 }
 
-long getPressure(){
- unsigned long pressure = bmp.readPressure(); 
+void updatePressure(){
+ pressure = bmp.readPressure(); 
  Serial.print(F("Pressure = "));
  Serial.println(pressure);
- return pressure;
 }
-
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
