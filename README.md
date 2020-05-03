@@ -9,7 +9,8 @@ Rev 1:
 - 1 battery LI-ON 3.7V / 2000 mAH
 - Some wires
 
-Rev 1:
+
+Rev 2:
 - 1 Arduino MKR 1010 WIFI
 - 1 Adafruit BMP 280 sensor
 - 1 Bread Board
@@ -48,8 +49,3 @@ WiFi Software (mqtt):
 Not connected software (Rev 2):
 ===============================
 Folder: EnvSensingRev2
-
-
-TODO:
-=====
-- create a new rev1 software using MQTT
