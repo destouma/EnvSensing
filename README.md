@@ -24,13 +24,16 @@ Battery Service:
 https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.battery_service.xml
 
 
-WiFi Software:
-==============
-[Empty]
+WiFi Software (http):
+=====================
+Http Client is posting to the rest api env-sensing-api
+
+
+WiFi Software (mqtt):
+=====================
+[empty]
 
 
 TODO:
 =====
-- Add software description for BLE Software
-- Add software description for WiFi Software
-- Fix get sensor value in WiFi software
+- create a new rev1 software using MQTT
