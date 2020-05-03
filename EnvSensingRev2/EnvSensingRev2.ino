@@ -64,13 +64,9 @@ void setup() {
 void loop() {
   delay(1000);
   display.clearDisplay();  
-  display.setTextSize(2); 
+  display.setTextSize(4); 
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 0);
-  display.println(F("Temp."));
-  display.setTextSize(3); 
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 20);
+  display.setCursor(5, 10);
   display.println(bmp.readTemperature());
   display.display();
 
@@ -80,13 +76,9 @@ void loop() {
 
   delay(1000);
   display.clearDisplay();  
-  display.setTextSize(2); 
+  display.setTextSize(4); 
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 0);
-  display.println(F("Pression"));
-  display.setTextSize(3); 
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 20);
+  display.setCursor(5, 10);
   pressure = bmp.readPressure()/100;
   display.println(pressure);
   display.display();
@@ -97,13 +89,9 @@ void loop() {
 
   delay(1000);
   display.clearDisplay();  
-  display.setTextSize(2); 
+  display.setTextSize(4); 
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 0);
-  display.println(F("Battery"));
-  display.setTextSize(3); 
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 20);
+  display.setCursor(5, 10);
   battery = analogRead(ADC_BATTERY);
   batteryLevel = map(battery, 0, 1023, 0, 100);
   display.println(batteryLevel);
