@@ -15,13 +15,14 @@ int keyIndex = 0;
 int status = WL_IDLE_STATUS;
 
 // Web server informations
-IPAddress server(192,168,1,204);
+IPAddress server(192,168,1,238);
 int port = 80;
 WiFiClient client;
 HttpClient client1 = HttpClient(client, server, port);
 String response;
 int statusCode = 0;       
 String postData;
+int nbLoop =0;
 
 // BMP 280 sensor
 #define BMP_SCK  (13)
@@ -34,8 +35,12 @@ int batteryLevel=0;
 short temperature=0;
 unsigned long pressure=0;
 unsigned long counter=0;
-
+int Reset = 4;
 void setup() {
+  digitalWrite(Reset, HIGH);
+  delay(200); 
+  pinMode(Reset, OUTPUT); 
+  
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
@@ -82,11 +87,20 @@ void setup() {
 }
 
 void loop() {
-  updateBatteryLevel();
-  updateTemperature();
-  updatePressure();
-  httpRequest();
-  delay(60000);
+  Serial.print("Inside loop :");
+  Serial.println(nbLoop);
+  nbLoop++;
+  if(nbLoop > 10){
+    WiFi.end();
+    digitalWrite(Reset, LOW);
+  }else{
+    updateBatteryLevel();
+    updateTemperature();
+    updatePressure();
+    httpRequest();
+    delay(10000);
+  }
+
 }
 
 // this method makes a HTTP connection to the server:
