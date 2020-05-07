@@ -34,6 +34,17 @@ https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/u
 Battery Service:
 https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.battery_service.xml
 
+BLE Software (Rev2):
+====================
+Folder: EnvSensingBleRev2
+
+Environmental Sensing Service:
+https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.environmental_sensing.xml
+
+Battery Service:
+https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.battery_service.xml
+
+
 
 WiFi Software (http) (Rev 1):
 =============================
@@ -46,6 +57,6 @@ WiFi Software (mqtt):
 =====================
 [empty]
 
-Not connected software (Rev 2):
+Not connected Software (Rev 2):
 ===============================
 Folder: EnvSensingRev2
