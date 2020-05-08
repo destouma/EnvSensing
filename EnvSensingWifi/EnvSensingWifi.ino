@@ -35,11 +35,7 @@ int batteryLevel=0;
 short temperature=0;
 unsigned long pressure=0;
 unsigned long counter=0;
-int Reset = 4;
 void setup() {
-  digitalWrite(Reset, HIGH);
-  delay(200); 
-  pinMode(Reset, OUTPUT); 
   
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
@@ -87,20 +83,11 @@ void setup() {
 }
 
 void loop() {
-  Serial.print("Inside loop :");
-  Serial.println(nbLoop);
-  nbLoop++;
-  if(nbLoop > 10){
-    WiFi.end();
-    digitalWrite(Reset, LOW);
-  }else{
-    updateBatteryLevel();
-    updateTemperature();
-    updatePressure();
-    httpRequest();
-    delay(10000);
-  }
-
+  updateBatteryLevel();
+  updateTemperature();
+  updatePressure();
+  httpRequest();
+  delay(10000);
 }
 
 // this method makes a HTTP connection to the server:
