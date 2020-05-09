@@ -5,13 +5,20 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+
+const int ledPin = LED_BUILTIN; // set ledPin to on-board LED
+
 // Bluetooth
 BLEService environmentalSensingService("181A");
-BLEUnsignedLongCharacteristic pressureChar("2A6D", BLERead | BLENotify);
-BLEShortCharacteristic temperatureChar("2A6E", BLERead | BLENotify);
+BLEUnsignedLongCharacteristic pressureChar("2A6D", BLERead | BLENotify | BLEWrite);
+BLEShortCharacteristic temperatureChar("2A6E", BLERead | BLENotify | BLEWrite);
+BLEDescriptor configDesc("2902", "config");
 
 BLEService batteryService("180F");
 BLEUnsignedCharCharacteristic batteryLevelChar("2A19",BLERead | BLENotify);
+
+BLEService ledService("19B10010-E8F2-537E-4F6C-D104768A1214"); // create service
+BLEByteCharacteristic ledCharacteristic("19B10011-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
 
 // BMP 280 sensor
 #define BMP_SCK  (13)
@@ -54,13 +61,19 @@ void setup() {
   BLE.setLocalName("EnvironmentalSensing");
   
   BLE.setAdvertisedService(environmentalSensingService); 
+  //pressureChar.addDescriptor(configDesc);
   environmentalSensingService.addCharacteristic(pressureChar); 
+ // temperatureChar.addDescriptor(configDesc);
   environmentalSensingService.addCharacteristic(temperatureChar); 
   BLE.addService(environmentalSensingService); 
-  
+
+  batteryLevelChar.addDescriptor(configDesc);
   batteryService.addCharacteristic(batteryLevelChar);
   BLE.addService(batteryService);
-  
+
+  ledService.addCharacteristic(ledCharacteristic);
+  BLE.addService(ledService);
+
   pressureChar.writeValue(0);
   temperatureChar.writeValue(0);
   batteryLevelChar.writeValue(0);
@@ -88,9 +101,22 @@ void loop() {
 
   // if a central is connected to the peripheral:
   if (central) {
+
+    
     Serial.print("Connected to central: ");
     Serial.println(central.address());
     Serial.println();
+
+    if (ledCharacteristic.written()) {
+        // update LED, either central has written to characteristic or button state has changed
+        if (ledCharacteristic.value()) {
+          Serial.println("LED on");
+          digitalWrite(ledPin, HIGH);
+        } else {
+          Serial.println("LED off");
+          digitalWrite(ledPin, LOW);
+        }
+      }
 
     updateCharValues();
     updateBatteryLevel();
