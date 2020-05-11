@@ -61,13 +61,10 @@ void setup() {
   BLE.setLocalName("EnvironmentalSensing");
   
   BLE.setAdvertisedService(environmentalSensingService); 
-  //pressureChar.addDescriptor(configDesc);
   environmentalSensingService.addCharacteristic(pressureChar); 
- // temperatureChar.addDescriptor(configDesc);
   environmentalSensingService.addCharacteristic(temperatureChar); 
   BLE.addService(environmentalSensingService); 
 
-  batteryLevelChar.addDescriptor(configDesc);
   batteryService.addCharacteristic(batteryLevelChar);
   BLE.addService(batteryService);
 
