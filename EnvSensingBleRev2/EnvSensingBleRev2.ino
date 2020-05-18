@@ -57,8 +57,8 @@ void setup() {
     while (1);
   }
 
-  BLE.setDeviceName("ES");
-  BLE.setLocalName("EnvironmentalSensing");
+  BLE.setDeviceName("INDYBOX");
+  BLE.setLocalName("INDYBOX");
   
   BLE.setAdvertisedService(environmentalSensingService); 
   environmentalSensingService.addCharacteristic(pressureChar); 
@@ -105,6 +105,9 @@ void loop() {
     Serial.println();
 
     if (ledCharacteristic.written()) {
+         Serial.print("Value changedl: ");
+         Serial.println(ledCharacteristic.value());
+
         // update LED, either central has written to characteristic or button state has changed
         if (ledCharacteristic.value()) {
           Serial.println("LED on");
