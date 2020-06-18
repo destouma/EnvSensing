@@ -39,7 +39,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);    // initialize serial communication
   while (!Serial);
-
+  
   if (!bmp.begin()) {
     Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
     while (1);
@@ -50,26 +50,26 @@ void setup() {
                   Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 
-
   if (!BLE.begin()) {
     Serial.println("starting BLE failed!");
 
     while (1);
   }
+ 
 
-  BLE.setDeviceName("INDYBOX");
-  BLE.setLocalName("INDYBOX");
+  BLE.setDeviceName("ARDUINO");
+  BLE.setLocalName("ARDUINO");
   
   BLE.setAdvertisedService(environmentalSensingService); 
   environmentalSensingService.addCharacteristic(pressureChar); 
   environmentalSensingService.addCharacteristic(temperatureChar); 
   BLE.addService(environmentalSensingService); 
 
-  batteryService.addCharacteristic(batteryLevelChar);
-  BLE.addService(batteryService);
+//  batteryService.addCharacteristic(batteryLevelChar);
+//  BLE.addService(batteryService);
 
-  ledService.addCharacteristic(ledCharacteristic);
-  BLE.addService(ledService);
+//  ledService.addCharacteristic(ledCharacteristic);
+//  BLE.addService(ledService);
 
   pressureChar.writeValue(0);
   temperatureChar.writeValue(0);
@@ -104,19 +104,19 @@ void loop() {
     Serial.println(central.address());
     Serial.println();
 
-    if (ledCharacteristic.written()) {
-         Serial.print("Value changedl: ");
-         Serial.println(ledCharacteristic.value());
-
-        // update LED, either central has written to characteristic or button state has changed
-        if (ledCharacteristic.value()) {
-          Serial.println("LED on");
-          digitalWrite(ledPin, HIGH);
-        } else {
-          Serial.println("LED off");
-          digitalWrite(ledPin, LOW);
-        }
-      }
+//    if (ledCharacteristic.written()) {
+//         Serial.print("Value changedl: ");
+//         Serial.println(ledCharacteristic.value());
+//
+//        // update LED, either central has written to characteristic or button state has changed
+//        if (ledCharacteristic.value()) {
+//          Serial.println("LED on");
+//          digitalWrite(ledPin, HIGH);
+//        } else {
+//          Serial.println("LED off");
+//          digitalWrite(ledPin, LOW);
+//        }
+//      }
 
     updateCharValues();
     updateBatteryLevel();
