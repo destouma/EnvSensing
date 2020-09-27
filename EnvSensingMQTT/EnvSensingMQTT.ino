@@ -8,7 +8,7 @@
 #include <Adafruit_BMP280.h>
 #include "arduino_secret.h" 
 
-#define BROKER_IP    "192.168.1.238"
+#define BROKER_IP    "xxx.xxx.xxx.xxx"
 #define DEV_NAME     "mqttdevice"
 #define MQTT_USER    ""
 #define MQTT_PW      ""
@@ -26,10 +26,7 @@ int keyIndex = 0;
 int status = WL_IDLE_STATUS;
 
 // Web server informations
-IPAddress server(192,168,1,238);
-int port = 80;
 WiFiClient clientWIFI;
-HttpClient clientHTTP = HttpClient(clientWIFI, server, port);
 MQTTClient clientMQTT;
 String response;
 int statusCode = 0;       
