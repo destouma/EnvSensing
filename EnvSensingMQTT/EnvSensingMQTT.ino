@@ -12,7 +12,7 @@
 #include "arduino_secret.h" 
 
 // MQTT
-#define BROKER_IP    "192.168.1.238"
+#define BROKER_IP    ""
 #define DEV_NAME     "mqttdevice"
 #define MQTT_USER    ""
 #define MQTT_PW      ""
@@ -43,11 +43,9 @@ unsigned long pressure=0;
 float ftemperature = 0.0;
 float fpressure = 0.0;
 
-// OLED screen
+// OLED SSD1306 display connected to I2C (SDA, SCL pins)
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -97,8 +95,8 @@ void setup() {
    delay(1000);
  }
  Serial.println("connected!");
- clientMQTT.subscribe("temperature"); //SUBSCRIBE TO TOPIC /hello
- clientMQTT.subscribe("pressure"); //SUBSCRIBE TO TOPIC /hello
+ clientMQTT.subscribe("temperature"); 
+ clientMQTT.subscribe("pressure"); 
 
 // Oled Screen
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
