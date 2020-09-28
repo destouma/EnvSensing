@@ -6,40 +6,50 @@
 #include <MQTT.h>
 #include <ArduinoJson.h>
 #include <Adafruit_BMP280.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
 #include "arduino_secret.h" 
 
-#define BROKER_IP    "xxx.xxx.xxx.xxx"
+// MQTT
+#define BROKER_IP    "192.168.1.238"
 #define DEV_NAME     "mqttdevice"
 #define MQTT_USER    ""
 #define MQTT_PW      ""
+
+// BMP 280
 #define BMP_SCK  (13)
 #define BMP_MISO (12)
 #define BMP_MOSI (11)
 #define BMP_CS   (10)
 
-// your network SSID (name)
-char ssid[] = SECRET_SSID;        // your network SSID (name)
-char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
-// your network key Index number (needed only for WEP)   
-int keyIndex = 0;            
+// WIFI
+#define SECRET_SSID ""
+#define SECRET_PASS ""
 
+// WIFI Client
+WiFiClient clientWIFI;
+char ssid[] = SECRET_SSID; 
+char pass[] = SECRET_PASS;
 int status = WL_IDLE_STATUS;
 
-// Web server informations
-WiFiClient clientWIFI;
+// MQTT client 
 MQTTClient clientMQTT;
-String response;
-int statusCode = 0;       
-String postData;
-int nbLoop =0;
 
 // BMP 280 sensor
 Adafruit_BMP280 bmp;
-
-int battery=0;
 short temperature=0;
 unsigned long pressure=0;
-unsigned long counter=0;
+float ftemperature = 0.0;
+float fpressure = 0.0;
+
+// OLED screen
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setup() {
   
@@ -68,24 +78,16 @@ void setup() {
     while (true);
   }
 
-  // Check WiFi firmware
-  String fv = WiFi.firmwareVersion();
-  if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-    Serial.println("Please upgrade the firmware");
-  }
-
-  // attempt to connect to Wifi network:
+  // Connect to Wifi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
-    // wait 10 seconds for connection:
-    delay(10000);
+    delay(60000);
   }
-  // you're connected now, so print out the status:
   printWifiStatus();
 
+ // Connect to MQTT broker
  clientMQTT.begin(BROKER_IP, 1883, clientWIFI);
  clientMQTT.onMessage(messageReceived);
 
@@ -98,29 +100,52 @@ void setup() {
  clientMQTT.subscribe("temperature"); //SUBSCRIBE TO TOPIC /hello
  clientMQTT.subscribe("pressure"); //SUBSCRIBE TO TOPIC /hello
 
+// Oled Screen
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); 
+  }
+  display.display();
+  delay(2000); 
+  display.clearDisplay();
+  display.display();
 }
 
 void loop() {
-//  updateBatteryLevel();
-  updateTemperature();
-  updatePressure();
-//  httpRequest();
-   clientMQTT.publish("pressure", String(pressure)); 
-   clientMQTT.publish("temperature", String(temperature)); 
-   delay(10000);
+  publishTemperature();
+  publishPressure();
+
+  display.clearDisplay();  
+  display.setTextSize(2); 
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(5, 10);
+  display.println(ftemperature);
+  display.setCursor(5, 30);
+  display.println(fpressure);
+  display.display(); 
+  delay(15000);
+  display.clearDisplay();  
+  display.display();
+  delay(15000);
+
 }
 
 
-void updateTemperature(){
+void publishTemperature(){
+  ftemperature = bmp.readTemperature();
   temperature = bmp.readTemperature() * 100;
   Serial.print(F("Temperature = "));
   Serial.println(temperature);
+  clientMQTT.publish("temperature", String(temperature)); 
 }
 
-void updatePressure(){
+void publishPressure(){
+ fpressure = bmp.readPressure()/100; 
  pressure = bmp.readPressure(); 
  Serial.print(F("Pressure = "));
  Serial.println(pressure);
+ 
+ clientMQTT.publish("pressure", String(pressure)); 
 }
 
 void printWifiStatus() {

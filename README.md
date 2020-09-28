@@ -18,6 +18,14 @@ Rev 2:
 - Some wires
 - 0.96 Inch OLED Display SSD1306 I2C 128*64
 
+Rev 3:
+- 1 Arduino MKR 1010 WIFI
+- 1 Adafruit BMP 280 sensor
+- 1 Bread Board
+- 1 battery LI-ON 3.7V / 2000 mAH
+- Some wires
+- 0.96 Inch OLED Display SSD1306 I2C 128*64
+- microSD card
 
 Board Rev 1:
 ============
@@ -53,9 +61,12 @@ Folder: EnvSensingWifi
 Http Client is posting to the rest api env-sensing-api
 
 
-WiFi Software (mqtt):
+WiFi Software (mqtt) (Rev 1):
 =====================
-[empty]
+Folder EnvSensingMQTT
+
+change you wifi settings in arduino_secret.h
+change you broker ip
 
 Not connected Software (Rev 2):
 ===============================
