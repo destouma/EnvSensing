@@ -12,7 +12,7 @@
 #include "arduino_secret.h" 
 
 // MQTT
-#define BROKER_IP    ""
+#define BROKER_IP    "192.168.1.238"
 #define DEV_NAME     "mqttdevice"
 #define MQTT_USER    ""
 #define MQTT_PW      ""
@@ -24,8 +24,8 @@
 #define BMP_CS   (10)
 
 // WIFI
-#define SECRET_SSID ""
-#define SECRET_PASS ""
+#define SECRET_SSID "manu-laet"
+#define SECRET_PASS "06071972"
 
 // WIFI Client
 WiFiClient clientWIFI;
@@ -40,23 +40,15 @@ MQTTClient clientMQTT;
 Adafruit_BMP280 bmp;
 short temperature=0;
 unsigned long pressure=0;
-float ftemperature = 0.0;
-float fpressure = 0.0;
-
-// OLED SSD1306 display connected to I2C (SDA, SCL pins)
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setup() {
   
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  while (!Serial) {
-      // wait for serial port to connect. Needed for native USB port only
-    ; 
-  }
+//  while (!Serial) {
+//      // wait for serial port to connect. Needed for native USB port only
+//    ; 
+//  }
 
   // check bmp280 sensor
   if (!bmp.begin()) {
@@ -98,39 +90,16 @@ void setup() {
  clientMQTT.subscribe("temperature"); 
  clientMQTT.subscribe("pressure"); 
 
-// Oled Screen
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;); 
-  }
-  display.display();
-  delay(2000); 
-  display.clearDisplay();
-  display.display();
 }
 
 void loop() {
   publishTemperature();
   publishPressure();
-
-  display.clearDisplay();  
-  display.setTextSize(2); 
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(5, 10);
-  display.println(ftemperature);
-  display.setCursor(5, 30);
-  display.println(fpressure);
-  display.display(); 
-  delay(15000);
-  display.clearDisplay();  
-  display.display();
-  delay(15000);
-
+  delay(10000);
 }
 
 
 void publishTemperature(){
-  ftemperature = bmp.readTemperature();
   temperature = bmp.readTemperature() * 100;
   Serial.print(F("Temperature = "));
   Serial.println(temperature);
@@ -138,7 +107,6 @@ void publishTemperature(){
 }
 
 void publishPressure(){
- fpressure = bmp.readPressure()/100; 
  pressure = bmp.readPressure(); 
  Serial.print(F("Pressure = "));
  Serial.println(pressure);
