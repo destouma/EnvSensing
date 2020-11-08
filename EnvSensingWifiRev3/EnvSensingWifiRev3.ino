@@ -4,45 +4,39 @@
 #include <HttpClient.h>
 #include <ArduinoJson.h>
 #include "arduino_secrets.h" 
+#include "cactus_io_BME280_I2C.h"
+#include <ArduinoLowPower.h>
+#include <CooperativeMultitasking.h>
 
-// your network SSID (name)
-char ssid[] = "manu-laet";        // your network SSID (name)
-char pass[] = "06071972";    // your network password (use for WPA, or use as key for WEP)
-// your network key Index number (needed only for WEP)   
-int keyIndex = 0;            
+char ssid[] = SECRET_SSID;       
+char pass[] = SECRET_PASS;   
 
 int status = WL_IDLE_STATUS;
 
 // Web server informations
-IPAddress server(192,168,1,215);
-int port = 3000;
+IPAddress server(SERVER_IP_1,SERVER_IP_2,SERVER_IP_3,SERVER_IP_4);
+int port = SERVER_PORT;
 WiFiClient client;
 HttpClient client1 = HttpClient(client, server, port);
-String response;
-int statusCode = 0;       
-String postData;
-int nbLoop =0;
 
-// BME 280 sensor
-int battery=0;
-int batteryLevel=0;
-short temperature=0;
-unsigned long pressure=0;
-unsigned long counter=0;
+// BME 280
+BME280_I2C bme(0x76); // I2C using address 0x76
 
-#define FIVEMIN (1000UL * 60 * 1)
-unsigned long rolltime = millis() + FIVEMIN;
+CooperativeMultitasking tasks;
 
 void setup() {
-  
-  //Initialize serial and wait for port to open:
+  //SERIAL init
   Serial.begin(9600);
   while (!Serial) {
-      // wait for serial port to connect. Needed for native USB port only
-    ; 
+    delay(1000); 
   }
 
-  // check bme280 sensor
+  // BME280 sensor
+  if (!bme.begin()) {
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    while (1);
+  }
+  bme.setTempCal(-1);
   
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -57,81 +51,62 @@ void setup() {
     Serial.println("Please upgrade the firmware");
   }
 
-  // attempt to connect to Wifi network:
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    status = WiFi.begin(ssid, pass);
-
-    // wait 10 seconds for connection:
-    delay(10000);
-  }
-  // you're connected now, so print out the status:
-  printWifiStatus();
+  WiFi.begin(ssid, pass);
+  tasks.after(10000, checkWiFi); // after 10 seconds call checkWiFi()
+  tasks.after(30000, postData);
 }
-
 
 void loop() {
-  if((long)(millis() - rolltime) >= 0) {
-    getCurrentDateTime();
-    getAllSensors("123-123-000-000");
-    rolltime += FIVEMIN;
+   tasks.run();
+}
+
+void checkWiFi() {
+  switch (WiFi.status()) {
+    case WL_CONNECT_FAILED:
+    case WL_CONNECTION_LOST:
+    case WL_DISCONNECTED:
+      Serial.println("wifi not connected");
+      WiFi.begin(ssid, pass);
+      tasks.after(10000, checkWiFi);
+      return;
   }
+  tasks.after(30000, checkWiFi); 
 }
 
 
-void getCurrentDateTime() {
-  client1.get("/api/v1/date_time/current_date_time.json");
-
-  statusCode = client1.responseStatusCode();
-  response = client1.responseBody();
-
-  Serial.print("Status code: ");
-  Serial.println(statusCode);
-  Serial.print("Response: ");
-  Serial.println(response);   
+void postData(){
+  bme.readSensor();
+  Serial.println();
+  Serial.print(bme.getPressure_MB()); Serial.print(" mb\t"); // Pressure in millibars
+  Serial.print(bme.getHumidity()); Serial.print(" %\t\t");
+  Serial.print(bme.getTemperature_C()); Serial.print(" *C\t");
+  Serial.print(bme.getTemperature_F()); Serial.println(" *F\t");
+       
+  // Post temperature
+  postReadingRequest("123-123-000-001",bme.getTemperature_C()*100);
+  // Post Pressure
+  postReadingRequest("123-123-000-002",bme.getPressure_MB()*10000);
+  // Post Humidity
+  postReadingRequest("123-123-000-003",bme.getHumidity()*100);
+  
+  tasks.after(30000, postData);
 }
 
-void getAllSensors(String device_uuid) {
-  client1.get("/api/v1/sensors.json?device_uuid=" + device_uuid);
-
-  statusCode = client1.responseStatusCode();
-  response = client1.responseBody();
-
-  Serial.print("Status code: ");
-  Serial.println(statusCode);
-  Serial.print("Response: ");
-  Serial.println(response);
-    
-}
-
-void postReadingsRequest() {
-  Serial.println("making POST request");
-  postData="";
-  counter++;
+void postReadingRequest(String uuid, int value) { 
+  String response;
+  int statusCode = 0;
+  
+  String postData = "";
   StaticJsonDocument<500> doc;
-  doc["device_uuid"] = "123-123-000-000";
-  JsonArray readings = doc.createNestedArray("sensor_readings");
-  JsonObject object1 = readings.createNestedObject();
-  object1["sensor_uuid"] = "123-123-000-001";
-  object1["sensor_value"] = temperature;
-  JsonObject object2 = readings.createNestedObject();
-  object2["sensor_uuid"] = "123-123-000-002";
-  object2["sensor_value"] = pressure;
-  JsonObject object3 = readings.createNestedObject();
-  object3["sensor_uuid"] = "123-123-000-003";
-  object3["sensor_value"] = batteryLevel;
-  JsonObject object4 = readings.createNestedObject();
-  object4["sensor_uuid"] = "123-123-000-004";
-  object4["sensor_value"] = counter;
+  doc["sensor_uuid"] = uuid;
+  doc["sensor_value"] = value;
   serializeJson(doc, postData);
   
-  Serial.print("Post Data:");
+  Serial.print("Post Data     : ");
   Serial.println(postData);
 
   client1.beginRequest();
-  client1.post("/api/v1/device_readings.json");
+  client1.post("/api/v1/sensor_readings.json");
   client1.sendHeader("Host", "192.168.1.238");
   client1.sendHeader(HTTP_HEADER_CONTENT_TYPE, "application/json");
   client1.sendHeader(HTTP_HEADER_CONTENT_LENGTH, postData.length());
@@ -141,33 +116,8 @@ void postReadingsRequest() {
   // read the status code and body of the response
   statusCode = client1.responseStatusCode();
   response = client1.responseBody();
-
-  Serial.print("Status code: ");
+  Serial.print("   status code: ");
   Serial.println(statusCode);
-  Serial.print("Response: ");
+  Serial.print("   response   : ");
   Serial.println(response);
-
-  // if the server's disconnected, stop the client:
-  if (!client.connected()) {
-    Serial.println();
-    Serial.println("disconnecting from server.");
-    client.stop();
-  }
-}
-
-void printWifiStatus() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your board's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
 }
