@@ -7,7 +7,11 @@
 #include "cactus_io_BME280_I2C.h"
 #include <ArduinoLowPower.h>
 #include <CooperativeMultitasking.h>
+// for debug on serial
+//#define DEBUG
 
+// for prod with serial
+#define PROD
 char ssid[] = SECRET_SSID;       
 char pass[] = SECRET_PASS;   
 
@@ -25,31 +29,39 @@ BME280_I2C bme(0x76); // I2C using address 0x76
 CooperativeMultitasking tasks;
 
 void setup() {
-  //SERIAL init
-  Serial.begin(9600);
-  while (!Serial) {
-    delay(1000); 
-  }
+  #ifdef DEBUG
+    //SERIAL init
+    Serial.begin(9600);
+    while (!Serial) {
+      delay(1000); 
+    }
+  #endif
 
   // BME280 sensor
   if (!bme.begin()) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    #ifdef DEBUG
+      Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    #endif
     while (1);
   }
   bme.setTempCal(-1);
   
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
-    Serial.println("Communication with WiFi module failed!");
+    #ifdef DEBUG
+      Serial.println("Communication with WiFi module failed!");
+    #endif
     // don't continue
     while (true);
   }
 
   // Check WiFi firmware
-  String fv = WiFi.firmwareVersion();
-  if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-    Serial.println("Please upgrade the firmware");
-  }
+  #ifdef DEBUG
+    String fv = WiFi.firmwareVersion();
+    if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+      Serial.println("Please upgrade the firmware");
+    }
+  #endif
 
   WiFi.begin(ssid, pass);
   tasks.after(10000, checkWiFi); // after 10 seconds call checkWiFi()
@@ -65,7 +77,9 @@ void checkWiFi() {
     case WL_CONNECT_FAILED:
     case WL_CONNECTION_LOST:
     case WL_DISCONNECTED:
-      Serial.println("wifi not connected");
+      #ifdef DEBUG
+        Serial.println("wifi not connected");
+      #endif
       WiFi.begin(ssid, pass);
       tasks.after(10000, checkWiFi);
       return;
@@ -76,11 +90,13 @@ void checkWiFi() {
 
 void postData(){
   bme.readSensor();
-  Serial.println();
-  Serial.print(bme.getPressure_MB()); Serial.print(" mb\t"); // Pressure in millibars
-  Serial.print(bme.getHumidity()); Serial.print(" %\t\t");
-  Serial.print(bme.getTemperature_C()); Serial.print(" *C\t");
-  Serial.print(bme.getTemperature_F()); Serial.println(" *F\t");
+  #ifdef DEBUG
+    Serial.println();
+    Serial.print(bme.getPressure_MB()); Serial.print(" mb\t"); // Pressure in millibars
+    Serial.print(bme.getHumidity()); Serial.print(" %\t\t");
+    Serial.print(bme.getTemperature_C()); Serial.print(" *C\t");
+    Serial.print(bme.getTemperature_F()); Serial.println(" *F\t");
+  #endif
        
   // Post temperature
   postReadingRequest("123-123-000-001",bme.getTemperature_C()*100);
@@ -89,7 +105,7 @@ void postData(){
   // Post Humidity
   postReadingRequest("123-123-000-003",bme.getHumidity()*100);
   
-  tasks.after(30000, postData);
+  tasks.after(3600000, postData);
 }
 
 void postReadingRequest(String uuid, int value) { 
@@ -101,13 +117,14 @@ void postReadingRequest(String uuid, int value) {
   doc["sensor_uuid"] = uuid;
   doc["sensor_value"] = value;
   serializeJson(doc, postData);
-  
+  #ifdef DEBUG
   Serial.print("Post Data     : ");
   Serial.println(postData);
+  #endif
 
   client1.beginRequest();
   client1.post("/api/v1/sensor_readings.json");
-  client1.sendHeader("Host", "192.168.1.238");
+  client1.sendHeader("Host", "192.168.1.183");
   client1.sendHeader(HTTP_HEADER_CONTENT_TYPE, "application/json");
   client1.sendHeader(HTTP_HEADER_CONTENT_LENGTH, postData.length());
   client1.endRequest();
@@ -116,8 +133,10 @@ void postReadingRequest(String uuid, int value) {
   // read the status code and body of the response
   statusCode = client1.responseStatusCode();
   response = client1.responseBody();
-  Serial.print("   status code: ");
-  Serial.println(statusCode);
-  Serial.print("   response   : ");
-  Serial.println(response);
+  #ifdef DEBUG
+    Serial.print("   status code: ");
+    Serial.println(statusCode);
+    Serial.print("   response   : ");
+    Serial.println(response);
+  #endif
 }
