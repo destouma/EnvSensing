@@ -3,9 +3,6 @@
 #include <SPI.h>
 #include "cactus_io_BME280_I2C.h"
 
-
-const int ledPin = LED_BUILTIN; // set ledPin to on-board LED
-
 // Bluetooth
 BLEService environmentalSensingService("181A");
 BLEUnsignedLongCharacteristic pressureChar("2A6D", BLERead | BLENotify );
@@ -16,15 +13,13 @@ BLEDescriptor configDesc("2902", "config");
 BLEService batteryService("180F");
 BLEUnsignedCharCharacteristic batteryLevelChar("2A19",BLERead | BLENotify);
 
-
-// BME 280
 BME280_I2C bme(0x76); 
 
-
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);    // initialize serial communication
-  while (!Serial);
+  #ifdef DEBUG
+    Serial.begin(9600);    // initialize serial communication
+    while (!Serial);
+  #endif
   
   // BME280 sensor
   if (!bme.begin()) {
@@ -35,7 +30,9 @@ void setup() {
   }
 
   if (!BLE.begin()) {
+    #ifdef DEBUG
     Serial.println("starting BLE failed!");
+    #endif
 
     while (1);
   }
@@ -50,30 +47,26 @@ void setup() {
   environmentalSensingService.addCharacteristic(humidityChar); 
   BLE.addService(environmentalSensingService); 
 
-//  batteryService.addCharacteristic(batteryLevelChar);
-//  BLE.addService(batteryService);
-
-//  ledService.addCharacteristic(ledCharacteristic);
-//  BLE.addService(ledService);
-
   pressureChar.setValue(0);
   temperatureChar.setValue(0);
-  batteryLevelChar.setValue(0);
+  humidityChar.setValue(0);
   
   BLE.advertise();
-
+  #ifdef DEBUG
   Serial.println("Bluetooth device active, waiting for connections...");
+  #endif
 }
 
 void loop() {
   BLEDevice central = BLE.central();
   if (central) {
+    #ifdef DEBUG
     Serial.print("Connected to central: ");
     Serial.println(central.address());
     Serial.println();
-
+    #endif
     updateCharValues();
-    Serial.println();
+  
   }
   
 }
@@ -85,13 +78,15 @@ void updateCharValues(){
   float temperature = bme.getTemperature_C();
   float humidity = bme.getHumidity();
 
-  int iPressure = (int) (pressure * 10000);
+  unsigned long iPressure = (int) (pressure * 10000);
   int iTemperature = (int) (temperature * 100);
-  int iHumidity = (int) (humidity * 100);
+  unsigned int iHumidity = (int) (humidity * 100);
   
+  pressureChar.writeValue(iPressure);
+  temperatureChar.writeValue(iTemperature);
+  humidityChar.writeValue(iHumidity);
 
-
-
+  #ifdef DEBUG
   Serial.print(F("Temperature = "));
   Serial.println(temperature);
 
@@ -100,13 +95,5 @@ void updateCharValues(){
   
   Serial.print(F("Humidity = "));
   Serial.println(humidity);
-}
-
-void updateBatteryLevel() {
-  int battery = analogRead(ADC_BATTERY);
-  int batteryLevel = map(battery, 0, 1023, 0, 100);
-  
-  batteryLevelChar.writeValue(batteryLevel);
-  Serial.print("Battery Level % is now: "); // print it
-  Serial.println(batteryLevel);
+  #endif
 }
