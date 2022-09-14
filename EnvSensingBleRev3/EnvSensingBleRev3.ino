@@ -2,16 +2,46 @@
 #include <Wire.h>
 #include <SPI.h>
 #include "cactus_io_BME280_I2C.h"
+// #define DEBUG 1
+
+uint8_t pressureFormat[] = {
+  0x08, // Format = UINT 32
+  0x00, // Exponent = 0
+  0x24, // Unit = 0x2724 = pascal
+  0x27, // ditto (high byte)
+  0x01, // Namespace = 1 = "Bluetooth SIG Assigned Numbers"
+  0x00, // Description = 0 = "unknown" (low byte)
+  0x00, // ditto (high byte)
+};
+
+uint8_t temperatureFormat[] = {
+  0x0E, // Format = SINT16
+  0x00, // Exponent = 0
+  0x00, // Unit = 0x272f = celcius temperature
+  0x27, // ditto (high byte)
+  0x01, // Namespace = 1 = "Bluetooth SIG Assigned Numbers"
+  0x00, // Description = 0 = "unknown" (low byte)
+  0x00, // ditto (high byte)
+};
+
+uint8_t humidityFormat[] = {
+  0x06, // Format = UNINT16
+  0x00, // Exponent = 0
+  0xAD, // Unit = 0x27AD = percentage
+  0x27, // ditto (high byte)
+  0x01, // Namespace = 1 = "Bluetooth SIG Assigned Numbers"
+  0x00, // Description = 0 = "unknown" (low byte)
+  0x00, // ditto (high byte)
+};
 
 // Bluetooth
 BLEService environmentalSensingService("181A");
 BLEUnsignedLongCharacteristic pressureChar("2A6D", BLERead | BLENotify );
 BLEShortCharacteristic temperatureChar("2A6E", BLERead | BLENotify );
 BLEShortCharacteristic humidityChar("2A6F", BLERead | BLENotify );
-BLEDescriptor configDesc("2902", "config");
-
-BLEService batteryService("180F");
-BLEUnsignedCharCharacteristic batteryLevelChar("2A19",BLERead | BLENotify);
+BLEDescriptor pressurePresentationFormatDesc("2904",pressureFormat,7);
+BLEDescriptor temperaturePresentationFormatDesc("2904",temperatureFormat,7);
+BLEDescriptor humidityPresentationFormatDesc("2904",humidityFormat,7);
 
 BME280_I2C bme(0x76); 
 
@@ -42,11 +72,18 @@ void setup() {
   BLE.setLocalName("ARDUINO");
   
   BLE.setAdvertisedService(environmentalSensingService); 
+  
+  pressureChar.addDescriptor(pressurePresentationFormatDesc);
   environmentalSensingService.addCharacteristic(pressureChar); 
+  
+  temperatureChar.addDescriptor(temperaturePresentationFormatDesc);
   environmentalSensingService.addCharacteristic(temperatureChar); 
+  
+  humidityChar.addDescriptor(humidityPresentationFormatDesc);
   environmentalSensingService.addCharacteristic(humidityChar); 
-  BLE.addService(environmentalSensingService); 
 
+  BLE.addService(environmentalSensingService); 
+  
   pressureChar.setValue(0);
   temperatureChar.setValue(0);
   humidityChar.setValue(0);
@@ -65,6 +102,7 @@ void loop() {
     Serial.println(central.address());
     Serial.println();
     #endif
+    delay(200);
     updateCharValues();
   
   }
