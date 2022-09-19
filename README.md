@@ -35,10 +35,8 @@ Folder: EnvSensingBle
 Temperature / Pressure / Battery Level
 
 Environmental Sensing Service:
-https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.environmental_sensing.xml
-
 Battery Service:
-https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.battery_service.xml
+
 
 BLE Software (Rev2):
 ====================
@@ -47,10 +45,17 @@ Folder: EnvSensingBleRev2
 Temperature / Pressure / Battery Level
 
 Environmental Sensing Service:
-https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.environmental_sensing.xml
-
 Battery Service:
-https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.battery_service.xml
+
+
+BLE Software (Rev2):
+====================
+Folder: EnvSensingBleRev2
+
+Temperature / Pressure / Battery Level
+
+Environmental Sensing Service:
+
 
 
 WiFi Software (http) (Rev 1):
