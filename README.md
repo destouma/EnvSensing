@@ -41,8 +41,8 @@ Folder: EnvSensingBle
 
 Temperature / Pressure / Battery Level
 
-Environmental Sensing Service:
-Battery Service:
+Environmental Sensing Service
+Battery Service
 
 
 BLE Software (Rev2):
@@ -51,18 +51,17 @@ Folder: EnvSensingBleRev2
 
 Temperature / Pressure / Battery Level
 
-Environmental Sensing Service:
-Battery Service:
+Environmental Sensing Service
+Battery Service
 
 
-BLE Software (Rev2):
+BLE Software (Rev3):
 ====================
-Folder: EnvSensingBleRev2
+Folder: EnvSensingBleRev3
 
-Temperature / Pressure / Battery Level
+Temperature / Pressure / Humidity
 
-Environmental Sensing Service:
-
+Environmental Sensing Service
 
 
 WiFi Software (http) (Rev 1):
