@@ -23,6 +23,13 @@ Rev 3:
 - 1 Bread Board
 - Some wires
 
+
+BME 280 sensor, install cactus.io library:
+==========================================
+http://cactus.io/hookups/sensors/barometric/bme280/hookup-arduino-to-bme280-barometric-pressure-sensor
+http://static.cactus.io/downloads/library/bme280/cactus_io_BME280_I2C.zip
+
+
 Board Rev 1:
 ============
 ![board](https://github.com/destouma/envsensing/blob/master/Board/EnvSensingRev1.jpg)
